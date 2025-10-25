@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video to Pointcloud Converter</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Video to Pointcloud Converter</h1>
+            <p>Upload a video and convert it to a 3D pointcloud</p>
+        </header>
+
+        <main>
+            <!-- Upload Section -->
+            <div id="upload-section" class="section">
+                <div class="upload-area" id="upload-area">
+                    <div class="upload-icon">📹</div>
+                    <h2>Drag & Drop Video Here</h2>
+                    <p>or</p>
+                    <label for="video-input" class="btn btn-primary">Choose File</label>
+                    <input type="file" id="video-input" accept="video/*" hidden>
+                    <p class="file-info">Supported formats: MP4, AVI, MOV, MKV, WEBM (Max: 500MB)</p>
+                </div>
+
+                <div class="settings">
+                    <label for="fps-input">Target FPS:</label>
+                    <input type="number" id="fps-input" value="30" min="1" max="120">
+                    <span class="info-text">Frames to extract per second</span>
+                </div>
+
+                <div class="selected-file" id="selected-file" style="display: none;">
+                    <p><strong>Selected:</strong> <span id="filename"></span></p>
+                    <button id="start-btn" class="btn btn-success">Start Processing</button>
+                </div>
+            </div>
+
+            <!-- Processing Section -->
+            <div id="processing-section" class="section" style="display: none;">
+                <h2>Processing Video</h2>
+
+                <div class="progress-container">
+                    <div class="progress-bar">
+                        <div id="progress-fill" class="progress-fill" style="width: 0%">
+                            <span id="progress-text">0%</span>
+                        </div>
+                    </div>
+                    <p id="status-text" class="status-text">Initializing...</p>
+                </div>
+
+                <div class="processing-info">
+                    <div class="spinner"></div>
+                    <p>Please wait while we process your video. This may take several minutes depending on video length and quality.</p>
+                </div>
+            </div>
+
+            <!-- Complete Section -->
+            <div id="complete-section" class="section" style="display: none;">
+                <div class="success-icon">✅</div>
+                <h2>Processing Complete!</h2>
+                <p>Your pointcloud has been generated successfully.</p>
+
+                <div class="download-info">
+                    <p><strong>Package includes:</strong></p>
+                    <ul>
+                        <li>Original video file</li>
+                        <li>Extracted frames</li>
+                        <li>Generated pointcloud (.poi)</li>
+                    </ul>
+                </div>
+
+                <button id="download-btn" class="btn btn-success btn-large">Download ZIP</button>
+                <button id="reset-btn" class="btn btn-secondary">Process Another Video</button>
+            </div>
+
+            <!-- Error Section -->
+            <div id="error-section" class="section" style="display: none;">
+                <div class="error-icon">❌</div>
+                <h2>Error</h2>
+                <p id="error-message" class="error-text"></p>
+                <button id="retry-btn" class="btn btn-primary">Try Again</button>
+            </div>
+        </main>
+
+        <footer>
+            <p>Video to Pointcloud Converter | Powered by Flask & OpenCV</p>
+        </footer>
+    </div>
+
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script src="{{ url_for('static', filename='js/upload.js') }}"></script>
+</body>
+</html>
