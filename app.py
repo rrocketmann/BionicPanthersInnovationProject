@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, jsonify, send_file
-from flask_socketio import SocketIO
+from flask_socketio import SocketIO, emit
 from werkzeug.utils import secure_filename
 import os
 import shutil
@@ -122,7 +122,7 @@ def process_video_task(session_id, fps):
         )
 
         # Phase 2: Generate pointcloud (40-90%)
-        generate_pointcloud(
+        poi_file_path = generate_pointcloud(
             temp_frames_dir,
             progress_callback=lambda p: socketio.emit(
                 "progress",
@@ -165,9 +165,9 @@ def process_video_task(session_id, fps):
                 )
 
         # Copy pointcloud file
-        if "/results" and os.path.exists("/results"):
+        if poi_file_path and os.path.exists(poi_file_path):
             shutil.copy(
-                "/results", os.path.join(output_dir, os.path.basename("/results"))
+                poi_file_path, os.path.join(output_dir, os.path.basename(poi_file_path))
             )
 
         # Create zip file
