@@ -1,0 +1,3 @@
+[submodule "libs/map-anything"]
+	path = libs/map-anything
+	url = https://github.com/facebookresearch/map-anything.git

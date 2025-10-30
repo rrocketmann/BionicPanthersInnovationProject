@@ -3,3 +3,40 @@ Flask-SocketIO==5.3.5
 opencv-python==4.8.1.78
 python-socketio==5.10.0
 Werkzeug==3.0.1
+numpy<2
+-e libs/map-anything
+
+# Setup & test instructions
+# -------------------------
+# Use the commands below to create a clean environment and install dependencies.
+# Recommended: use conda on macOS for binary compatibility, especially for OpenCV and NumPy.
+#
+# Conda (recommended)
+# -------------------
+# conda create -n bionic python=3.12 -y
+# conda activate bionic
+# conda install -c conda-forge numpy opencv -y
+# pip install -r /Users/schrody/dev/PYTHON/BionicPanthersInnovationProject/requirements.txt
+#
+# venv / pip
+# ------------
+# python -m venv .venv
+# source .venv/bin/activate
+# pip install --upgrade pip
+# # If NumPy 2.x caused incompatible binary extensions, pin to numpy<2:
+# pip install --upgrade --force-reinstall "numpy<2" opencv-python
+# pip install -r /Users/schrody/dev/PYTHON/BionicPanthersInnovationProject/requirements.txt
+#
+# Quick smoke-test (create a tiny frames dir first)
+# -------------------------------------------------
+# mkdir -p processing_temp/test_session_for_ci
+# printf '\0' > processing_temp/test_session_for_ci/frame1.jpg
+#
+# Then run:
+# python3 - <<'PY'
+# from processing.pointcloud_generator import generate_pointcloud
+# print(generate_pointcloud('processing_temp/test_session_for_ci'))
+# PY
+#
+# This will exercise the fallback path if heavy model deps are not available,
+# and will write a PLY to processing_temp/test_session_for_ci/results/pointcloud.ply
