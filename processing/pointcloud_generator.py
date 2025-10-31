@@ -16,8 +16,9 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 model = MapAnything.from_pretrained("facebook/map-anything").to(device)
 
 
-def generate_pointcloud(frames_dir, progress_callback=None):
-    # Load and preprocess images from a folder or list of paths
+def generate_pointcloud(
+    frames_dir, progress_callback=None
+):  # Load and preprocess images from a folder or list of paths
     images = frames_dir
     views = load_images(images)
     predictions = model.infer(
@@ -31,50 +32,25 @@ def generate_pointcloud(frames_dir, progress_callback=None):
         confidence_percentile=10,
     )
 
-    # Access results for each view - Complete list of metric outputs
-    for i, pred in enumerate(predictions):
-        # Geometry outputs
-        pts3d = pred["pts3d"]  # 3D points in world coordinates (B, H, W, 3)
-        pts3d_cam = pred["pts3d_cam"]  # 3D points in camera coordinates (B, H, W, 3)
-        depth_z = pred["depth_z"]  # Z-depth in camera frame (B, H, W, 1)
-        depth_along_ray = pred[
-            "depth_along_ray"
-        ]  # Depth along ray in camera frame (B, H, W, 1)
+    output_file = os.path.join(frames_dir, "pointcloud.ply")  # Define output file path
 
-        # Camera outputs
-        ray_directions = pred[
-            "ray_directions"
-        ]  # Ray directions in camera frame (B, H, W, 3)
-        intrinsics = pred["intrinsics"]  # Recovered pinhole camera intrinsics (B, 3, 3)
-        camera_poses = pred[
-            "camera_poses"
-        ]  # OpenCV (+X - Right, +Y - Down, +Z - Forward) cam2world poses in world frame (B, 4, 4)
-        cam_trans = pred[
-            "cam_trans"
-        ]  # OpenCV (+X - Right, +Y - Down, +Z - Forward) cam2world translation in world frame (B, 3)
-        cam_quats = pred[
-            "cam_quats"
-        ]  # OpenCV (+X - Right, +Y - Down, +Z - Forward) cam2world quaternion in world frame (B, 4)
+    # Process predictions to generate pointcloud data
+    with open(output_file, "w") as f:
+        f.write(f"# Pointcloud File\n")
+        f.write(f"# Generated from provided frames\n")
+        f.write(f"# Replace this with actual pointcloud data\n")
+        f.write(f"# Format: X Y Z R G B\n")
+        for i, pred in enumerate(predictions):
+            # Geometry outputs
+            pts3d = pred["pts3d"]  # 3D points in world coordinates (B, H, W, 3)
+            # Here you would transform your pts3d and other data into the desired pointcloud format
+            # Example of iterating if pts3d were usable.
+            for point in pts3d.reshape(-1, 3):  # Flatten and iterate over 3D points
+                f.write(
+                    f"{point[0]} {point[1]} {point[2]} 255 255 255\n"
+                )  # Placeholder color white
 
-        # Quality and masking
-        confidence = pred["conf"]  # Per-pixel confidence scores (B, H, W)
-        mask = pred["mask"]  # Combined validity mask (B, H, W, 1)
-        non_ambiguous_mask = pred[
-            "non_ambiguous_mask"
-        ]  # Non-ambiguous regions (B, H, W)
-        non_ambiguous_mask_logits = pred[
-            "non_ambiguous_mask_logits"
-        ]  # Mask logits (B, H, W)
-
-        # Scaling
-        metric_scaling_factor = pred[
-            "metric_scaling_factor"
-        ]  # Applied metric scaling (B,)
-
-        # Original input
-        img_no_norm = pred[
-            "img_no_norm"
-        ]  # Denormalized input images for visualization (B, H, W, 3)
+    return output_file  # Return the path to the generated .ply file
 
 
 #     # Count frames
