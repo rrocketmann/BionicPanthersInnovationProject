@@ -1,11 +1,13 @@
 from flask import Flask, render_template, request, jsonify, send_file
-from flask_socketio import SocketIO, emit
+from flask_socketio import SocketIO
 from werkzeug.utils import secure_filename
 import os
 import shutil
 import threading
 from datetime import datetime
-from processing.video_processor import VideoProcessor
+
+# Note: VideoProcessor is imported lazily inside the processing task to avoid
+# import-time failures when OpenCV (cv2) is unavailable or ABI-mismatched.
 from processing.pointcloud_generator import generate_pointcloud
 
 app = Flask(__name__)
@@ -97,6 +99,20 @@ def process_video_task(session_id, fps):
             },
         )
 
+        # Lazy-import VideoProcessor here to avoid importing cv2 at module import time.
+        # If OpenCV is unavailable or ABI-mismatched, emit an error and stop processing.
+        try:
+            from processing.video_processor import VideoProcessor
+        except Exception as e:
+            socketio.emit(
+                "error",
+                {
+                    "session_id": session_id,
+                    "message": "Video processing dependency error: " + str(e),
+                },
+            )
+            return
+
         processor = VideoProcessor()
         frame_count = processor.extract_frames(
             video_path,
@@ -122,17 +138,19 @@ def process_video_task(session_id, fps):
         )
 
         # Phase 2: Generate pointcloud (40-90%)
-        poi_file_path = generate_pointcloud(
-            temp_frames_dir,
-            progress_callback=lambda p: socketio.emit(
-                "progress",
+        # Call generate_pointcloud without a progress callback (function accepts only frames_dir).
+        # Wrap in try/except to capture errors and report them via SocketIO so the flow can continue.
+        try:
+            poi_file_path = generate_pointcloud(temp_frames_dir)
+        except Exception as e:
+            poi_file_path = None
+            socketio.emit(
+                "error",
                 {
                     "session_id": session_id,
-                    "percentage": int(40 + p * 0.5),
-                    "status": f"Generating pointcloud... {int(p)}%",
+                    "message": f"Pointcloud generation failed: {str(e)}",
                 },
-            ),
-        )
+            )
 
         socketio.emit(
             "progress",
